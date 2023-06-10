@@ -1,0 +1,41 @@
+{
+  "name": "vnas-discord-bot",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "format": "prettier --write \"./src/**/*.ts\"",
+    "lint": "eslint src",
+    "build": "tsc",
+    "start": "node build/index.js",
+    "dev": "ts-node-dev --respawn --pretty --transpile-only src/index.ts"
+  },
+  "engines": {
+    "node": "^18.13.0"
+  },
+  "dependencies": {
+    "discord.js": "^14.8.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "jira-client": "^8.2.2",
+    "jose": "^4.13.1",
+    "sqlite3": "^5.1.6",
+    "ulid": "^2.3.0",
+    "winston": "^3.8.2",
+    "winston-daily-rotate-file": "^4.7.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.15",
+    "@types/jira-client": "^7.1.5",
+    "@types/lodash": "^4.14.191",
+    "@types/node": "^18.11.18",
+    "@typescript-eslint/eslint-plugin": "^5.48.2",
+    "eslint": "^8.32.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-import-resolver-typescript": "^3.5.3",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.8.3",
+    "typescript": "^4.9.4"
+  }
+}
