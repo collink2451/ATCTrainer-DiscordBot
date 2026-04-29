@@ -3,7 +3,6 @@ import { Channel, CommandInteraction, ThreadChannel } from "discord.js";
 import Context from "./Context";
 import { closeThread, inProgressThread } from "./DiscordApi";
 import logger from "./logger";
-import { BUG_REPORT_CHANNELS, FEATURE_REQUESTS_CHANNEL_ID } from "./utils/constants";
 
 export default class DiscordCommandProcessor {
   private context: Context;
@@ -24,60 +23,27 @@ export default class DiscordCommandProcessor {
       throw Error("Failed to find command channel");
     }
 
+    if (!checkInThread(command, channel)) {
+      return;
+    }
+
+    const threadChannel = channel as ThreadChannel;
+
     switch (command.commandName) {
       case "resolve": {
-        if (!checkInThread(command, channel)) {
-          return;
-        }
-        const threadChannel = channel as ThreadChannel;
-        closeThread(threadChannel, false);
+        closeThread(threadChannel);
         command.reply(`Resolved thread.`);
         return;
       }
       case "in-progress": {
-        if (!checkInThread(command, channel)) {
-          return;
-        }
-        const threadChannel = channel as ThreadChannel;
         inProgressThread(threadChannel);
         command.reply(`Status set to in progress.`);
         return;
       }
-      case "feature":
-      case "improvement":
-      case "bug": {
-        if (!checkInThread(command, channel)) {
-          return;
-        }
-        const threadChannel = channel as ThreadChannel;
-        const parentChannel = await this.context.discordApi!.discordClient.channels.fetch(threadChannel.parentId!);
-        if (!parentChannel) {
-          this.context.handleError("Failed to create Jira ticket", "Parent channel is null");
-          return;
-        }
-
-        if (!checkBugReportOrFeatureForum(command, parentChannel)) {
-          return;
-        }
-
-        await command.reply("I created a ticket for you.");
+      case "create": {
+        await command.reply("Thread tagged with issue ID.");
 
         const issueKey = command.options.get("issue-id")?.value?.toString().toUpperCase();
-        // Respond in thread
-        if (command.commandName === "bug") {
-          try {
-            // await threadChannel.send(`Your ticket number is: **${issueKey}**`);
-          } catch (e) {
-            this.context.handleError(`Failed to send message to ${threadChannel.name} thread`, e);
-          }
-        } else {
-          try {
-            // await threadChannel.send(`Your ticket number is: **${issueKey}**`);
-          } catch (e) {
-            this.context.handleError(`Failed to send message to ${threadChannel.name} thread`, e);
-          }
-        }
-
         // Set thread name
         try {
           await threadChannel.setName(`[${issueKey}] ${threadChannel.name}`.substring(0, 100));
@@ -95,18 +61,8 @@ export default class DiscordCommandProcessor {
 const checkInThread = (command: CommandInteraction, channel: Channel) => {
   if (!channel.isThread()) {
     logger.info(`${command.commandName} command was not executed in a thread. Ignoring.`);
-    command.reply("Because this isn't a thread, I cannot create a ticket for you.");
+    command.reply("This command must be used inside a thread.");
     return false;
   }
-  return true;
-};
-
-const checkBugReportOrFeatureForum = async (command: CommandInteraction, parentChannel: Channel) => {
-  if (parentChannel.id !== FEATURE_REQUESTS_CHANNEL_ID && !BUG_REPORT_CHANNELS.includes(parentChannel.id)) {
-    logger.info(`${command.commandName} command was not executed in a valid thread. Ignoring.`);
-    command.reply("Because this isn't a valid forum, I cannot create a ticket for you.");
-    return false;
-  }
-
   return true;
 };
